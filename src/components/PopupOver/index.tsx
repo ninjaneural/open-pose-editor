@@ -7,6 +7,7 @@ import { BodyEditor } from '../../editor'
 import useForceUpdate from '../../hooks/useFoceUpdate'
 import i18n from '../../i18n'
 import { BodyControlor } from '../../body'
+import { FindObjectItem } from '../../utils/three-utils'
 
 const { PopoverContent, IconButton, PopoverArrow, Input } = classes
 
@@ -315,6 +316,65 @@ const ControlorPopover: React.FC<{
                                 forceUpdate={forceUpdate}
                             ></Slider2>
                         ))}
+                        <div
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    minWidth: 60,
+                                    maxWidth: 120,
+                                    // width:"max-content",
+                                    overflow: 'hidden',
+                                    color: 'gray',
+                                    fontSize: '70%',
+                                    marginInlineEnd: 10,
+                                    // whiteSpace: 'nowrap',
+                                    textOverflow: 'ellipsis',
+                                }}
+                            >
+                                RED-DOT
+                            </div>
+                            <div style={{ width: 210 }}>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        onChange={(e) => {
+                                            console.log(
+                                                'checked',
+                                                e.target.checked
+                                            )
+                                            editor.scene.children
+                                                .filter(
+                                                    (o) => o?.name === 'torso'
+                                                )
+                                                .forEach((o) => {
+                                                    o.traverse((child) => {
+                                                        console.log(
+                                                            'child?.name',
+                                                            child?.name
+                                                        )
+                                                        if (
+                                                            child?.name ==
+                                                                'red_point' ||
+                                                            child?.name.indexOf(
+                                                                '_target'
+                                                            ) != -1
+                                                        ) {
+                                                            child.visible =
+                                                                !e.target
+                                                                    .checked
+                                                        }
+                                                    })
+                                                })
+                                        }}
+                                    />
+                                    HIDE
+                                </label>
+                            </div>
+                        </div>
                         {bodySelected ? (
                             <>
                                 <div

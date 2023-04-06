@@ -6,6 +6,10 @@ import {
     MeshDepthMaterial,
     MeshNormalMaterial,
     MeshPhongMaterial,
+    MeshToonMaterial,
+    MeshLambertMaterial,
+    MeshPhysicalMaterial,
+    MeshMatcapMaterial,
     Object3D,
     Skeleton,
     SkinnedMesh,
@@ -219,10 +223,10 @@ export class BodyEditor {
         this.scene.add(this.transformControl)
 
         // Light
-        this.dlight = new THREE.DirectionalLight(0xffffff, 1.0)
+        this.dlight = new THREE.DirectionalLight(0xffac7e, 1.0)
         this.dlight.position.set(0, 160, 1000)
         this.scene.add(this.dlight)
-        this.alight = new THREE.AmbientLight(0xffffff, 0.5)
+        this.alight = new THREE.AmbientLight(0xffac7e, 0.5)
         this.scene.add(this.alight)
 
         this.onMouseDown = this.onMouseDown.bind(this)
@@ -569,6 +573,19 @@ export class BodyEditor {
         }
         this.renderOutputBySize(outputWidth, outputHeight, custom ?? render)
     }
+
+    renderOutputAlpha(scale = 1, custom?: () => void) {
+        const outputWidth = this.OutputWidth * scale
+        const outputHeight = this.OutputHeight * scale
+
+        const render = () => {
+            this.outputRenderer.setClearAlpha(0)
+            this.outputRenderer.render(this.scene, this.camera)
+            this.outputRenderer.setClearAlpha(1)
+        }
+        this.renderOutputBySize(outputWidth, outputHeight, custom ?? render)
+    }
+
     getOutputPNG() {
         return this.outputRenderer.domElement.toDataURL('image/png')
     }
@@ -914,13 +931,17 @@ export class BodyEditor {
         }
     }
 
-    changeHandMaterial(type: 'depth' | 'normal' | 'phone') {
+    changeHandMaterial(type: 'depth' | 'normal' | 'phone' | 'toon') {
         if (type == 'depth')
             this.scene.overrideMaterial = new MeshDepthMaterial()
         else if (type == 'normal')
             this.scene.overrideMaterial = new MeshNormalMaterial()
+        else if (type == 'toon')
+            this.scene.overrideMaterial = new MeshPhysicalMaterial()
         else if (type == 'phone')
             this.scene.overrideMaterial = new MeshPhongMaterial()
+
+        console.log(type, this.scene.overrideMaterial)
 
         return () => {
             this.scene.overrideMaterial = null
@@ -1038,6 +1059,15 @@ export class BodyEditor {
         return this.getOutputPNG()
     }
 
+    CaptureDrawing() {
+        const restoreHand = this.changeHandMaterial('toon')
+        const restoreCamera = this.changeCamera()
+        this.renderOutputAlpha()
+        restoreCamera()
+        restoreHand()
+        return this.getOutputPNG()
+    }
+
     changeTransformControl() {
         const part = this.getSelectedPart()
 
@@ -1064,6 +1094,7 @@ export class BodyEditor {
 
         /// begin
         const map = this.hideSkeleten()
+        const drawingImage = this.CaptureDrawing()
         const depthImage = this.CaptureDepth()
         const normalImage = this.CaptureNormal()
         const cannyImage = this.CaptureCanny()
@@ -1082,6 +1113,7 @@ export class BodyEditor {
             depth: depthImage,
             normal: normalImage,
             canny: cannyImage,
+            drawing: drawingImage,
         }
 
         sendToAll({
